@@ -1,3 +1,0 @@
-[submodule "arduino_sketch/TurboStepper"]
-	path = arduino_sketch/TurboStepper
-	url = https://github.com/fhamonic/TurboStepper
