@@ -27,7 +27,7 @@ void setup() {
     Arm2Profile::Setup();
     ZProfile::Setup();
 
-    Serial.begin(19200);
+    Serial.begin(115200);
     pinModeFast(2, INPUT_PULLUP);
     pinMode(3, OUTPUT);
     Serial.println("Hello");
@@ -36,7 +36,8 @@ void setup() {
 void loop() { handleSerialInput(); }
 
 void pickOrPlace(bool pick) {
-    ZProfile::SetSpeed(-1.0);
+    //ZProfile::SetSpeed(0.1);
+    ZProfile::MoveBackward(-10000);
     while(digitalReadFast(2) != LOW) delayMicroseconds(100);
     ZProfile::SetSpeed(0.0);
     digitalWrite(3, pick ? HIGH : LOW);
@@ -80,7 +81,7 @@ bool InverseKinematic(float x, float y, float * A0, float * A1, float * A2) {
         Serial.println("Impossible to reach: too close (cancel movement)");
         return false;
     }
-    *A0 = atan2(y, x) * rad2deg;
+    *A0 = atan2(x, y) * rad2deg;
     *A1 = lawOfCosines(dist, arm1_len, arm2_len) * rad2deg;
     *A2 = 180.0f - lawOfCosines(arm1_len, arm2_len, dist) * rad2deg;
     return true;
@@ -103,18 +104,24 @@ void moveTo(float x, float y) {
     Serial.println(A1);
     Serial.println(A2);
 
-    float rot1 = (A0 + A1) / 360.0;
+    float rot1 = (A0 - A1) / 360.0;
     float rot2 = A2 / 360.0;
+    
+    Serial.println(rot1);
+    Serial.println(rot2);
+    Serial.println((rot2 * (62.0/20.0) * (62.0/35.0)  + rot1 *
+     (35.0/62.0)));
 
-    // Arm1Profile::MoveTo(800 * rot1 * (72.0/16.0));
-    // Arm2Profile::MoveTo(800 * rot2 * (62.0/35.0) * (62.0/16.0) - rot1 *
-    // (62.0/35.0)); Arm1Profile::WaitStop(); Arm2Profile::WaitStop();
+    Arm1Profile::MoveTo(800 * rot1 * (72.0/20.0));
+    Arm2Profile::MoveTo(800 * (rot2 * (62.0/20.0) * (62.0/35.0)  + rot1  * (62.0/20.0))); 
+     Arm1Profile::WaitStop();
+     Arm2Profile::WaitStop();
 }
 
 void handleSerialInput() {
     if(!Serial.available()) return;
-    char c = '\0';
-    Serial.readBytes(&c, 1);
+    char c = Serial.read();    
+    Serial.println(c);     
     if(c == 'G') {
         pickOrPlace(true);
     } else if(c == 'R') {
@@ -123,6 +130,8 @@ void handleSerialInput() {
         float x = Serial.parseFloat();
         float y = Serial.parseFloat();
         moveTo(x, y);
+    } else if(c == 'H') {
+        Arm1Profile::MoveTo(0);
+        Arm2Profile::MoveTo(0);
     }
-    Serial.readStringUntil('\n');
 }
