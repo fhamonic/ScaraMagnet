@@ -49,7 +49,7 @@ void pickOrPlace(bool pick) {
 //    A  B
 //   /    \
 //   ---C---
-// This function returns the angle between A and B in radians
+// This function returns the angle between sides A and B in radians
 float lawOfCosines(float a, float b, float c) {
     return acosf((a * a + b * b - c * c) / (2.0f * a * b));
 }
@@ -64,8 +64,7 @@ float lawOfCosines(float a, float b, float c) {
 //      |/
 //     / \
 //    /   \
-//   /     \
-//   -------
+//   /_____\
 // distances in mm, angles in degrees
 void InverseKinematic(float x, float y, float * A0, float * A1, float * A2) {
     static const float rad2deg = 57.2958f;
@@ -89,14 +88,23 @@ void moveTo(float x, float y) {
     static bool elbow_left = true;
     float A0, A1, A2;
     InverseKinematic(x, y, &A0, &A1, &A2);
+    if(elbow_left && (A0 + A1) < -95) elbow_left = false;
+    if(!elbow_left && (A0 + A1) > 95) elbow_left = true;
+    if(!elbow_left) {
+        A1 = -A1;
+        A2 = -A2;
+    }
 
+    Serial.println(A0);
     Serial.println(A1);
     Serial.println(A2);
 
-    // Arm1Profile::MoveTo(800 * (A0+A1)/360.0);
-    // Arm2Profile::MoveTo(800 * (A2)/360.0);
-    // Arm1Profile::WaitStop();
-    // Arm2Profile::WaitStop();
+    float rot1 = (A0 + A1) / 360.0;
+    float rot2 = A2 / 360.0;
+
+    // Arm1Profile::MoveTo(800 * rot1 * (72.0/16.0));
+    // Arm2Profile::MoveTo(800 * rot2 * (62.0/35.0) * (62.0/16.0) - rot1 *
+    // (62.0/35.0)); Arm1Profile::WaitStop(); Arm2Profile::WaitStop();
 }
 
 void handleSerialInput() {
