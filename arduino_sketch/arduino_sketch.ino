@@ -66,20 +66,24 @@ float lawOfCosines(float a, float b, float c) {
 //    /   \
 //   /_____\
 // distances in mm, angles in degrees
-void InverseKinematic(float x, float y, float * A0, float * A1, float * A2) {
+bool InverseKinematic(float x, float y, float * A0, float * A1, float * A2) {
     static const float rad2deg = 57.2958f;
     static const float arm1_len = 91.61f;
     static const float arm2_len = 105.92f;
 
     float dist = sqrt(x * x + y * y);
-
     if(dist > (arm1_len + arm2_len)) {
+        Serial.println("Impossible to reach: too far (will try max distance)");
         dist = (arm1_len + arm2_len) - 0.001f;
-        Serial.println("IK overflow->limit");
+    }
+    if(dist < 50) {
+        Serial.println("Impossible to reach: too close (cancel movement)");
+        return false;
     }
     *A0 = atan2(y, x) * rad2deg;
     *A1 = lawOfCosines(dist, arm1_len, arm2_len) * rad2deg;
     *A2 = 180.0f - lawOfCosines(arm1_len, arm2_len, dist) * rad2deg;
+    return true;
 }
 
 // InverseKinematic(x, y, 91.61, 105.92, elbow, &A1, &A2);
@@ -87,7 +91,7 @@ void InverseKinematic(float x, float y, float * A0, float * A1, float * A2) {
 void moveTo(float x, float y) {
     static bool elbow_left = true;
     float A0, A1, A2;
-    InverseKinematic(x, y, &A0, &A1, &A2);
+    if(!InverseKinematic(x, y, &A0, &A1, &A2)) return;
     if(elbow_left && (A0 + A1) < -95) elbow_left = false;
     if(!elbow_left && (A0 + A1) > 95) elbow_left = true;
     if(!elbow_left) {
