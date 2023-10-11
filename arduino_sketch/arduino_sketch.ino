@@ -1,5 +1,8 @@
 #include "TurboStepper.hpp"
 
+#define ENDSTOP_PIN 2
+#define MAGNET_PIN 3
+
 using Timer1 = ATMEGA328P::Timer1<C2MHz>;
 using Timer2 = ATMEGA328P::Timer2<C15_625Hz>;
 
@@ -28,8 +31,8 @@ void setup() {
     ZProfile::Setup();
 
     Serial.begin(115200);
-    pinModeFast(2, INPUT_PULLUP);
-    pinMode(3, OUTPUT);
+    pinModeFast(ENDSTOP_PIN, INPUT_PULLUP);
+    pinMode(MAGNET_PIN, OUTPUT);
     Serial.println("Hello");
 }
 
@@ -38,9 +41,9 @@ void loop() { handleSerialInput(); }
 void pickOrPlace(bool pick) {
     //ZProfile::SetSpeed(0.1);
     ZProfile::MoveBackward(-10000);
-    while(digitalReadFast(2) != LOW) delayMicroseconds(100);
+    while(digitalReadFast(ENDSTOP_PIN) != LOW) delayMicroseconds(100);
     ZProfile::SetSpeed(0.0);
-    digitalWrite(3, pick ? HIGH : LOW);
+    analogWrite(MAGNET_PIN, pick ? 96 : 0);
     ZProfile::WaitStop();
     ZProfile::MoveForward(-ZStepper::stepPos);
     ZProfile::WaitStop();
@@ -54,6 +57,7 @@ void pickOrPlace(bool pick) {
 float lawOfCosines(float a, float b, float c) {
     return acosf((a * a + b * b - c * c) / (2.0f * a * b));
 }
+
 //               /
 //              / \  
 //             /   A2
@@ -87,14 +91,12 @@ bool InverseKinematic(float x, float y, float * A0, float * A1, float * A2) {
     return true;
 }
 
-// InverseKinematic(x, y, 91.61, 105.92, elbow, &A1, &A2);
-
 void moveTo(float x, float y) {
     static bool elbow_left = true;
     float A0, A1, A2;
     if(!InverseKinematic(x, y, &A0, &A1, &A2)) return;
-    if(elbow_left && (A0 + A1) < -95) elbow_left = false;
-    if(!elbow_left && (A0 + A1) > 95) elbow_left = true;
+    if(elbow_left && (A0 - A1) < -95) elbow_left = false;
+    if(!elbow_left && (A0 - A1) > 95) elbow_left = true;
     if(!elbow_left) {
         A1 = -A1;
         A2 = -A2;
@@ -107,15 +109,11 @@ void moveTo(float x, float y) {
     float rot1 = (A0 - A1) / 360.0;
     float rot2 = A2 / 360.0;
     
-    Serial.println(rot1);
-    Serial.println(rot2);
-    Serial.println((rot2 * (62.0/20.0) * (62.0/35.0)  + rot1 *
-     (35.0/62.0)));
-
     Arm1Profile::MoveTo(800 * rot1 * (72.0/20.0));
-    Arm2Profile::MoveTo(800 * (rot2 * (62.0/20.0) * (62.0/35.0)  + rot1  * (62.0/20.0))); 
-     Arm1Profile::WaitStop();
-     Arm2Profile::WaitStop();
+    Arm2Profile::MoveTo(800 * (rot2 * (62.0/20.0) * (62.0/35.0)  + rot1  * (62.0/20.0)));
+
+    Arm1Profile::WaitStop();
+    Arm2Profile::WaitStop();
 }
 
 void handleSerialInput() {
