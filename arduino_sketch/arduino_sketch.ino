@@ -77,7 +77,7 @@ bool InverseKinematic(float x, float y, float * A0, float * A1, float * A2) {
         Serial.println("Impossible to reach: too far (will try max distance)");
         dist = (arm1_len + arm2_len) - 0.001f;
     }
-    if(dist < 50) {
+    if(dist < 70) {
         Serial.println("Impossible to reach: too close (cancel movement)");
         return false;
     }
@@ -121,7 +121,7 @@ void moveTo(float x, float y) {
 void handleSerialInput() {
     if(!Serial.available()) return;
     char c = Serial.read();    
-    Serial.println(c);     
+    Serial.println(c);
     if(c == 'G') {
         pickOrPlace(true);
     } else if(c == 'R') {
