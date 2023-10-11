@@ -8,6 +8,10 @@ Once the arduino_sketch is uploaded to your board, the python file scara_robot.p
 
 # How to
 
+Instal the python dependencies:
+
+    pip install pyserial
+
 Find the Arduino and webcam USB ports paths:
 
     ./list_usb_ports.sh
