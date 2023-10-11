@@ -8,15 +8,15 @@ class ScaraRobot:
         self.serial.readlines()  # wait for the arduino to wake up and empty the input buffer
 
     def move_to(self, x, y):
-        angle_string = "M {x} {y}\n".format(
+        angle_string = "M {x} {y} ".format(
             x=x, y=y)
         self.serial.write(angle_string.encode())
         
     def grab(self):
-        self.serial.write("G\n".encode())
+        self.serial.write("G ".encode())
 
     def release(self):
-        self.serial.write("R\n".encode())
+        self.serial.write("R ".encode())
         
     def home(self):
-        self.serial.write("H\n".encode())
+        self.serial.write("H ".encode())
