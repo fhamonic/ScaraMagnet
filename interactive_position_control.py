@@ -21,17 +21,21 @@ y_entry.grid(row=1, column=1)
 def moveTo():
     arm.move_to(float(x_entry.get()), float(y_entry.get()))
 
-def home():
-    arm.home()
-
 def grab():
     arm.grab()
 
 def release():
     arm.release()
 
+def home():
+    arm.home()
+
+def park():
+    arm.park()
+
 Button(root, text='MoveTo', command=moveTo).grid(row=2, column=1)
-Button(root, text='Home', command=home).grid(row=3, column=1)
-Button(root, text='Grab', command=grab).grid(row=4, column=1)
-Button(root, text='Release', command=release).grid(row=5, column=1)
+Button(root, text='Grab', command=grab).grid(row=3, column=1)
+Button(root, text='Release', command=release).grid(row=4, column=1)
+Button(root, text='Home', command=home).grid(row=5, column=1)
+Button(root, text='Park', command=park).grid(row=6, column=1)
 root.mainloop()

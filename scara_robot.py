@@ -20,3 +20,6 @@ class ScaraRobot:
         
     def home(self):
         self.serial.write("H ".encode())
+        
+    def park(self):
+        self.serial.write("P ".encode())

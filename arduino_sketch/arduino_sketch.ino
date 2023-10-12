@@ -93,7 +93,18 @@ bool InverseKinematic(float x, float y, float * A0, float * A1, float * A2) {
     return true;
 }
 
-void moveTo(float x, float y) {
+void moveToAngles(float angle_arm1, float angle_arm2) {
+    float rot1 = angle_arm1 / 360.0;
+    float rot2 = angle_arm2 / 360.0;
+    
+    Arm1Profile::MoveTo(800 * rot1 * (72.0/20.0));
+    Arm2Profile::MoveTo(800 * (rot2 * (62.0/20.0) * (62.0/35.0)  + rot1  * (62.0/20.0)));
+
+    Arm1Profile::WaitStop();
+    Arm2Profile::WaitStop();
+}
+
+void moveToPos(float x, float y) {
     static bool elbow_left = true;
     float A0, A1, A2;
     if(!InverseKinematic(x, y, &A0, &A1, &A2)) return;
@@ -104,18 +115,7 @@ void moveTo(float x, float y) {
         A2 = -A2;
     }
 
-    Serial.println(A0);
-    Serial.println(A1);
-    Serial.println(A2);
-
-    float rot1 = (A0 - A1) / 360.0;
-    float rot2 = A2 / 360.0;
-    
-    Arm1Profile::MoveTo(800 * rot1 * (72.0/20.0));
-    Arm2Profile::MoveTo(800 * (rot2 * (62.0/20.0) * (62.0/35.0)  + rot1  * (62.0/20.0)));
-
-    Arm1Profile::WaitStop();
-    Arm2Profile::WaitStop();
+    moveToAngles((A0 - A1), A2);
 }
 
 void handleSerialInput() {
@@ -129,9 +129,10 @@ void handleSerialInput() {
     } else if(c == 'M') {
         float x = Serial.parseFloat();
         float y = Serial.parseFloat();
-        moveTo(x, y);
+        moveToPos(x, y);
     } else if(c == 'H') {
-        Arm1Profile::MoveTo(0);
-        Arm2Profile::MoveTo(0);
+        moveToAngles(0,0);
+    } else if(c == 'P') {
+        moveToAngles(95.0f, -5.0f);
     }
 }
