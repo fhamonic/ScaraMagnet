@@ -8,7 +8,7 @@ using Timer2 = ATMEGA328P::Timer2<C15_625Hz>;
 
 using Arm1Stepper = Stepper<10, 9, 800, 4, 2>;
 using Arm2Stepper = Stepper<8, 5, 800, 4, 2>;
-using ZStepper = Stepper<6, 7, 1600, 1, 3>;
+using ZStepper = Stepper<6, 7, 1600, 1, 6>;
 
 using Arm1Profile = TrapezoidalProfile<Arm1Stepper, Timer1::CounterA>;
 using Arm2Profile = TrapezoidalProfile<Arm2Stepper, Timer1::CounterB>;
@@ -36,14 +36,16 @@ void setup() {
     Serial.println("Hello");
 }
 
-void loop() { handleSerialInput(); }
+void loop() { 
+  handleSerialInput();  
+}
 
 void pickOrPlace(bool pick) {
     //ZProfile::SetSpeed(0.1);
     ZProfile::MoveBackward(-10000);
     while(digitalReadFast(ENDSTOP_PIN) != LOW) delayMicroseconds(100);
     ZProfile::SetSpeed(0.0);
-    analogWrite(MAGNET_PIN, pick ? 96 : 0);
+    digitalWrite(MAGNET_PIN, pick ? HIGH : LOW);
     ZProfile::WaitStop();
     ZProfile::MoveForward(-ZStepper::stepPos);
     ZProfile::WaitStop();
