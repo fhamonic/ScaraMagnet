@@ -8,7 +8,7 @@ using Timer2 = ATMEGA328P::Timer2<C15_625Hz>;
 
 using Arm1Stepper = Stepper<10, 9, 800, 4, 2>;
 using Arm2Stepper = Stepper<8, 5, 800, 4, 2>;
-using ZStepper = Stepper<6, 7, 1600, 1, 6>;
+using ZStepper = Stepper<6, 7, 800, 1, 6>;
 
 using Arm1Profile = TrapezoidalProfile<Arm1Stepper, Timer1::CounterA>;
 using Arm2Profile = TrapezoidalProfile<Arm2Stepper, Timer1::CounterB>;
@@ -34,10 +34,13 @@ void setup() {
     pinModeFast(ENDSTOP_PIN, INPUT_PULLUP);
     pinMode(MAGNET_PIN, OUTPUT);
     Serial.println("Hello");
+
+    
+    pickOrPlace(true);
 }
 
 void loop() { 
-  handleSerialInput();  
+  //handleSerialInput();  
 }
 
 void pickOrPlace(bool pick) {
@@ -94,6 +97,14 @@ bool InverseKinematic(float x, float y, float * A0, float * A1, float * A2) {
 }
 
 void moveToAngles(float angle_arm1, float angle_arm2) {
+    static bool elbow_left = true;
+    if(elbow_left && angle_arm1 < -95) elbow_left = false;
+    if(!elbow_left && angle_arm1 > 95) elbow_left = true;
+    if(!elbow_left) {
+        angle_arm1 = -angle_arm1;
+        angle_arm2 = -angle_arm2;
+    }
+    
     float rot1 = angle_arm1 / 360.0;
     float rot2 = angle_arm2 / 360.0;
     
@@ -105,16 +116,8 @@ void moveToAngles(float angle_arm1, float angle_arm2) {
 }
 
 void moveToPos(float x, float y) {
-    static bool elbow_left = true;
     float A0, A1, A2;
     if(!InverseKinematic(x, y, &A0, &A1, &A2)) return;
-    if(elbow_left && (A0 - A1) < -95) elbow_left = false;
-    if(!elbow_left && (A0 - A1) > 95) elbow_left = true;
-    if(!elbow_left) {
-        A1 = -A1;
-        A2 = -A2;
-    }
-
     moveToAngles((A0 - A1), A2);
 }
 
