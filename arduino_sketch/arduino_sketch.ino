@@ -8,7 +8,7 @@ using Timer2 = ATMEGA328P::Timer2<C15_625Hz>;
 
 using Arm1Stepper = Stepper<10, 9, 800, 4, 2>;
 using Arm2Stepper = Stepper<8, 5, 800, 4, 2>;
-using ZStepper = Stepper<6, 7, 800, 1, 6>;
+using ZStepper = Stepper<6, 7, 800, 2, 16>;
 
 using Arm1Profile = TrapezoidalProfile<Arm1Stepper, Timer1::CounterA>;
 using Arm2Profile = TrapezoidalProfile<Arm2Stepper, Timer1::CounterB>;
